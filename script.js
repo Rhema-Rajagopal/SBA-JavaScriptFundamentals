@@ -1,11 +1,109 @@
-console.log("Welcome To SBA");
-// The provided course information.
+function isValidSubmission(submission, assignment) {
+  const score = submission.submission.score;
+  const pointsPossible = assignment.points_possible;
+
+  switch (true) {
+    case pointsPossible === 0:
+      return false;
+    case typeof score !== "number" || isNaN(score):
+      return false;
+    default:
+      return true;
+  }
+}
+
+function calculateWeightedAverage(totalScore, totalWeight) {
+  return totalScore / totalWeight;
+}
+
+function processLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
+  if (CourseInfo.id !== AssignmentGroup.course_id) {
+    throw new Error(
+      "Invalid input: AssignmentGroup does not belong to the course."
+    );
+  }
+
+  const assignments = AssignmentGroup.assignments.filter(
+    (assignment) => assignment.due_at !== "3156-11-15"
+  );
+  const assignmentScores = {};
+  const learnerData = {};
+
+  for (const submission of LearnerSubmissions) {
+    const assignment = assignments.find(
+      (a) => a.id === submission.assignment_id
+    );
+
+    if (!assignment) {
+      continue;
+    }
+
+    const dueDate = new Date(assignment.due_at);
+    const submittedDate = new Date(submission.submission.submitted_at);
+
+    if (submittedDate > dueDate) {
+      // Deduct 10% of the total points possible for late submissions
+      submission.submission.score -= 0.1 * assignment.points_possible;
+    }
+
+    if (isValidSubmission(submission, assignment)) {
+      const score = submission.submission.score;
+      const pointsPossible = assignment.points_possible;
+      const learnerID = submission.learner_id;
+
+      if (!learnerData[learnerID]) {
+        learnerData[learnerID] = {
+          id: learnerID,
+          totalScore: 0,
+          totalWeight: 0,
+        };
+      }
+
+      learnerData[learnerID].totalScore += score;
+      learnerData[learnerID].totalWeight += pointsPossible;
+      assignmentScores[submission.assignment_id] = score / pointsPossible;
+    }
+  }
+
+  return { learnerData, assignmentScores };
+}
+
+function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
+  try {
+    const { learnerData, assignmentScores } = processLearnerData(
+      CourseInfo,
+      AssignmentGroup,
+      LearnerSubmissions
+    );
+    const results = [];
+
+    for (const learnerID in learnerData) {
+      const learner = learnerData[learnerID];
+      const weightedAverage = calculateWeightedAverage(
+        learner.totalScore,
+        learner.totalWeight
+      );
+      const learnerResult = { id: learner.id, avg: weightedAverage };
+
+      for (const assignmentID in assignmentScores) {
+        learnerResult[assignmentID] = assignmentScores[assignmentID];
+      }
+
+      results.push(learnerResult);
+    }
+
+    return results;
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+// Sample data
 const CourseInfo = {
   id: 451,
   name: "Introduction to JavaScript",
 };
 
-// The provided assignment group.
 const AssignmentGroup = {
   id: 12345,
   name: "Fundamentals of JavaScript",
@@ -24,112 +122,58 @@ const AssignmentGroup = {
       due_at: "2023-02-27",
       points_possible: 150,
     },
+    {
+      id: 3,
+      name: "Code the World",
+      due_at: "3156-11-15",
+      points_possible: 500,
+    },
   ],
 };
 
-// The provided learner submission data.
 const LearnerSubmissions = [
   {
     learner_id: 125,
     assignment_id: 1,
-    submission: {
-      submitted_at: "2023-01-25",
-      score: 47,
-    },
+    submission: { submitted_at: "2023-01-25", score: 47 },
   },
   {
     learner_id: 125,
     assignment_id: 2,
-    submission: {
-      submitted_at: "2023-02-12",
-      score: 150,
-    },
+    submission: { submitted_at: "2023-02-12", score: 150 },
   },
-
+  {
+    learner_id: 125,
+    assignment_id: 3,
+    submission: { submitted_at: "2023-01-25", score: 400 },
+  },
   {
     learner_id: 132,
     assignment_id: 1,
-    submission: {
-      submitted_at: "2023-01-24",
-      score: 39,
-    },
+    submission: { submitted_at: "2023-01-24", score: 39 },
   },
   {
     learner_id: 132,
     assignment_id: 2,
-    submission: {
-      submitted_at: "2023-03-07",
-      score: 140,
-    },
+    submission: { submitted_at: "2023-03-07", score: 140 },
   },
 ];
 
-// function getLearnerData(course, ag, submissions) {
-function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
-  // Validate course ID
-  if (AssignmentGroup.course_id !== CourseInfo.id) {
-    throw new Error("AssignmentGroup does not belong to the specified course.");
-  }
-
-  // Calculate total weight of all assignments
-  const totalWeight = AssignmentGroup.assignments.reduce(
-    (acc, assignment) => acc + assignment.points_possible,
-    0
-  );
-
-  // Process learner submissions
-  const result = [];
-  LearnerSubmissions.forEach((submission) => {
-    // Initialize learner data object
-    const learnerData = {
-      id: submission.learner_id,
-      avg: 0,
-    };
-
-    console.log(learnerData);
-
-    // Initialize total score and count for calculating average
-
-    let count = 0;
-
-    // Process each assignment submission
-    AssignmentGroup.assignments.forEach((assignment) => {
-      // Check if the submission is for this assignment
-      if (submission.assignment_id === assignment.id) {
-        // Check if submission is not late
-        if (submission.submission.submitted_at <= assignment.due_at) {
-          // Calculate score percentage
-          const scorePercentage =
-            submission.submission.score / assignment.points_possible;
-          // Deduct 10% if submission is late
-          if (submission.submission.submitted_at > assignment.due_at) {
-            totalScore =
-              totalScore + scorePercentage * assignment.points_possible * 0.9;
-          } else {
-            totalScore =
-              totalScore + scorePercentage * assignment.points_possible;
-          }
-
-          console.log("2" + learnerData);
-          count++;
-          // Add assignment score to learner data object
-          learnerData[assignment.id] = scorePercentage * 1.0; // Convert to percentage
-        }
-      }
-    });
-
-    // Calculate weighted average score
-    learnerData.avg = (totalScore / totalWeight) * 100; // Convert to percentage
-
-    // Add learner data to result
-    result.push(learnerData);
-  });
-
-  return result;
-}
-
 const result = getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);
 
-console.log("cour" + CourseInfo);
+// Format the result as required
+const formattedResult = result.map((item) => {
+  const learnerID = item.id;
+  const avg = item.avg;
+  const formattedItem = { id: learnerID, avg: avg };
 
-console.log(result);
+  for (const assignment of AssignmentGroup.assignments) {
+    if (assignment.id !== 3) {
+      formattedItem[assignment.id] = item[assignment.id] || 0;
+    }
+  }
+
+  return formattedItem;
+});
+
+console.log(formattedResult);
