@@ -61,7 +61,11 @@ function processLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
 
       learnerData[learnerID].totalScore += score;
       learnerData[learnerID].totalWeight += pointsPossible;
-      assignmentScores[submission.assignment_id] = score / pointsPossible;
+      if (!assignmentScores[learnerID]) {
+        assignmentScores[learnerID] = {};
+      }
+      assignmentScores[learnerID][submission.assignment_id] =
+        score / pointsPossible;
     }
   }
 
@@ -85,8 +89,12 @@ function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
       );
       const learnerResult = { id: learner.id, avg: weightedAverage };
 
-      for (const assignmentID in assignmentScores) {
-        learnerResult[assignmentID] = assignmentScores[assignmentID];
+      for (const assignment of AssignmentGroup.assignments) {
+        const assignmentID = assignment.id;
+        if (assignmentID !== 3) {
+          const score = assignmentScores[learnerID]?.[assignmentID] || 0;
+          learnerResult[assignmentID] = score;
+        }
       }
 
       results.push(learnerResult);
@@ -160,20 +168,4 @@ const LearnerSubmissions = [
 ];
 
 const result = getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);
-
-// Format the result as required
-const formattedResult = result.map((item) => {
-  const learnerID = item.id;
-  const avg = item.avg;
-  const formattedItem = { id: learnerID, avg: avg };
-
-  for (const assignment of AssignmentGroup.assignments) {
-    if (assignment.id !== 3) {
-      formattedItem[assignment.id] = item[assignment.id] || 0;
-    }
-  }
-
-  return formattedItem;
-});
-
-console.log(formattedResult);
+console.log(result);
