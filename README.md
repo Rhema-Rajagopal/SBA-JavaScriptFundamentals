@@ -1,3 +1,7 @@
 "# SBA-JavaScriptFundamentals"
 
-Code is working fine. I dont have any blockers. Thanks
+This application uses the sample data given by instructors.
+I majorly used following functions function isValidSubmission(),function calculateWeightedAverage() and function processLearnerData() to produce the desired result.
+
+Code is working fine.Dont have any blockers.
+Thanks

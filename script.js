@@ -1,3 +1,5 @@
+//***************function isValidSubmission********* */
+
 // Function to check if a submission is valid based on the score and points possible.
 // Returns true if the submission is valid, otherwise false.
 
@@ -17,9 +19,14 @@ function isValidSubmission(submission, assignment) {
 
 // Function to calculate the weighted average given the total score and total weight.
 // Returns the calculated weighted average.
+
+//-----------function calculateWeightedAverage()-------------------
+
 function calculateWeightedAverage(totalScore, totalWeight) {
   return totalScore / totalWeight;
 }
+
+//**************function processLearnerData()*********** */
 
 // Function to process learner data, including filtering out assignments with due dates before the current date.
 // Computes total scores and weights for each learner and their assignment scores.
@@ -86,6 +93,8 @@ function processLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
   return { learnerData, assignmentScores };
 }
 
+// **************function getLearnerData************
+
 // Function to retrieve learner data, including their weighted averages and assignment scores.
 // Returns an array of objects containing learner IDs, their average scores, and assignment scores.
 
@@ -114,7 +123,9 @@ function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
 
       for (const assignment of AssignmentGroup.assignments) {
         const assignmentID = assignment.id;
-        if (assignmentID !== 3) {
+        const currentDate = new Date();
+        const dueDate = new Date(assignment.due_at);
+        if (dueDate <= currentDate) {
           const score = assignmentScores[learnerID]?.[assignmentID] || 0;
           learnerResult[assignmentID] = Math.round(score * 100) / 100;
         }
