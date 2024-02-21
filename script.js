@@ -23,9 +23,13 @@ function processLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
     );
   }
 
-  const assignments = AssignmentGroup.assignments.filter(
-    (assignment) => assignment.due_at !== "3156-11-15"
-  );
+  const currentDate = new Date(); // Get the current date
+
+  const assignments = AssignmentGroup.assignments.filter((assignment) => {
+    const dueDate = new Date(assignment.due_at);
+    return dueDate < currentDate; // Filter out assignments with due dates before today
+  });
+
   const assignmentScores = {};
   const learnerData = {};
 
@@ -47,8 +51,8 @@ function processLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
     }
 
     if (isValidSubmission(submission, assignment)) {
-      const score = submission.submission.score;
-      const pointsPossible = assignment.points_possible;
+      const score = Math.round(submission.submission.score * 100) / 100;
+      const pointsPossible = Math.round(assignment.points_possible * 100) / 100;
       const learnerID = submission.learner_id;
 
       if (!learnerData[learnerID]) {
@@ -59,8 +63,9 @@ function processLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
         };
       }
 
-      learnerData[learnerID].totalScore += score;
-      learnerData[learnerID].totalWeight += pointsPossible;
+      learnerData[learnerID].totalScore += Math.round(score * 100) / 100;
+      learnerData[learnerID].totalWeight +=
+        Math.round(pointsPossible * 100) / 100;
       if (!assignmentScores[learnerID]) {
         assignmentScores[learnerID] = {};
       }
@@ -81,7 +86,13 @@ function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
     );
     const results = [];
 
-    for (const learnerID in learnerData) {
+    // Get the keys of learnerData object
+    const learnerIDs = Object.keys(learnerData);
+    let i = 0;
+
+    // Iterate using while loop
+    while (i < learnerIDs.length) {
+      const learnerID = learnerIDs[i];
       const learner = learnerData[learnerID];
       const weightedAverage = calculateWeightedAverage(
         learner.totalScore,
@@ -93,11 +104,12 @@ function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
         const assignmentID = assignment.id;
         if (assignmentID !== 3) {
           const score = assignmentScores[learnerID]?.[assignmentID] || 0;
-          learnerResult[assignmentID] = score;
+          learnerResult[assignmentID] = Math.round(score * 100) / 100;
         }
       }
 
       results.push(learnerResult);
+      i++;
     }
 
     return results;
