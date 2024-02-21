@@ -1,3 +1,6 @@
+// Function to check if a submission is valid based on the score and points possible.
+// Returns true if the submission is valid, otherwise false.
+
 function isValidSubmission(submission, assignment) {
   const score = submission.submission.score;
   const pointsPossible = assignment.points_possible;
@@ -12,9 +15,15 @@ function isValidSubmission(submission, assignment) {
   }
 }
 
+// Function to calculate the weighted average given the total score and total weight.
+// Returns the calculated weighted average.
 function calculateWeightedAverage(totalScore, totalWeight) {
   return totalScore / totalWeight;
 }
+
+// Function to process learner data, including filtering out assignments with due dates before the current date.
+// Computes total scores and weights for each learner and their assignment scores.
+// Returns an object containing learner data and assignment scores.
 
 function processLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
   if (CourseInfo.id !== AssignmentGroup.course_id) {
@@ -76,6 +85,9 @@ function processLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
 
   return { learnerData, assignmentScores };
 }
+
+// Function to retrieve learner data, including their weighted averages and assignment scores.
+// Returns an array of objects containing learner IDs, their average scores, and assignment scores.
 
 function getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions) {
   try {
